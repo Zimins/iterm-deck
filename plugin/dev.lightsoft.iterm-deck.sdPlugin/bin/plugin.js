@@ -8049,23 +8049,35 @@ let SwitchOrCreateTabAction = (() => {
             if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
             __runInitializers(_classThis, _classExtraInitializers);
         }
+        // Cache user-configured button titles per action id
+        buttonTitles = new Map();
         async onWillAppear(ev) {
             await this.updateDisplay(ev.action, ev.payload.settings);
         }
         async onDidReceiveSettings(ev) {
             await this.updateDisplay(ev.action, ev.payload.settings);
         }
-        async updateDisplay(action, settings) {
-            const { tabName } = settings;
-            if (!tabName) {
-                await action.setTitle("Set Tab\nName");
-                return;
+        onTitleParametersDidChange(ev) {
+            // Cache the user-configured button title (only when tabName is not set)
+            if (!ev.payload.settings.tabName) {
+                this.buttonTitles.set(ev.action.id, ev.payload.title);
             }
-            await action.setTitle(tabName);
+        }
+        async updateDisplay(action, settings) {
+            if (settings.tabName) {
+                await action.setTitle(settings.tabName);
+            }
+            else {
+                // Reset to user-configured button title
+                // Reset to user-configured button title
+                await action.setTitle(undefined);
+            }
         }
         onKeyDown(ev) {
             const { tabName, profileName, command } = ev.payload.settings;
-            if (!tabName) {
+            // Use tabName from settings, or fall back to the user-configured button title
+            const resolvedTabName = tabName || this.buttonTitles.get(ev.action.id);
+            if (!resolvedTabName) {
                 ev.action.showAlert();
                 streamDeck.logger.warn("No tab name configured");
                 return;
@@ -8079,7 +8091,7 @@ let SwitchOrCreateTabAction = (() => {
                     return;
                 }
                 const scriptPath = path$1.join(__dirname$1, "../scripts/iterm_switch_tab.py");
-                const args = [scriptPath, tabName];
+                const args = [scriptPath, resolvedTabName];
                 if (profileName)
                     args.push(profileName);
                 else

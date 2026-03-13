@@ -3,6 +3,7 @@ import streamDeck, {
   SingletonAction,
   type DidReceiveSettingsEvent,
   type KeyDownEvent,
+  type TitleParametersDidChangeEvent,
   type WillAppearEvent,
 } from "@elgato/streamdeck";
 import { exec, spawn } from "child_process";
@@ -19,6 +20,9 @@ type SwitchOrCreateTabSettings = {
 
 @action({ UUID: "dev.lightsoft.iterm-deck.open-or-use" })
 export class SwitchOrCreateTabAction extends SingletonAction<SwitchOrCreateTabSettings> {
+  // Cache user-configured button titles per action id
+  private buttonTitles = new Map<string, string>();
+
   override async onWillAppear(ev: WillAppearEvent<SwitchOrCreateTabSettings>): Promise<void> {
     await this.updateDisplay(ev.action, ev.payload.settings);
   }
@@ -27,22 +31,33 @@ export class SwitchOrCreateTabAction extends SingletonAction<SwitchOrCreateTabSe
     await this.updateDisplay(ev.action, ev.payload.settings);
   }
 
+  override onTitleParametersDidChange(ev: TitleParametersDidChangeEvent<SwitchOrCreateTabSettings>): void {
+    // Cache the user-configured button title (only when tabName is not set)
+    if (!ev.payload.settings.tabName) {
+      this.buttonTitles.set(ev.action.id, ev.payload.title);
+    }
+  }
+
   private async updateDisplay(
     action: WillAppearEvent<SwitchOrCreateTabSettings>["action"],
     settings: SwitchOrCreateTabSettings,
   ): Promise<void> {
-    const { tabName } = settings;
-    if (!tabName) {
-      await action.setTitle("Set Tab\nName");
-      return;
+    if (settings.tabName) {
+      await action.setTitle(settings.tabName);
+    } else {
+      // Reset to user-configured button title
+      // Reset to user-configured button title
+      await (action as { setTitle(t?: string): Promise<void> }).setTitle(undefined);
     }
-    await action.setTitle(tabName);
   }
 
   override onKeyDown(ev: KeyDownEvent<SwitchOrCreateTabSettings>): void {
     const { tabName, profileName, command } = ev.payload.settings;
 
-    if (!tabName) {
+    // Use tabName from settings, or fall back to the user-configured button title
+    const resolvedTabName = tabName || this.buttonTitles.get(ev.action.id);
+
+    if (!resolvedTabName) {
       ev.action.showAlert();
       streamDeck.logger.warn("No tab name configured");
       return;
@@ -58,7 +73,7 @@ export class SwitchOrCreateTabAction extends SingletonAction<SwitchOrCreateTabSe
       }
 
       const scriptPath = path.join(__dirname, "../scripts/iterm_switch_tab.py");
-      const args = [scriptPath, tabName];
+      const args = [scriptPath, resolvedTabName];
       if (profileName) args.push(profileName);
       else args.push("");
       if (command) args.push(command);

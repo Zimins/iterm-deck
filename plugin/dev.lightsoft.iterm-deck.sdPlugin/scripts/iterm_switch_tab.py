@@ -1,3 +1,4 @@
+import asyncio
 import iterm2
 import sys
 
@@ -19,9 +20,10 @@ async def main(connection):
                 custom = await session.async_get_variable("user.itermDeckName")
                 candidate = custom or tab_title
                 if candidate and candidate.strip().lower() == tab_name.strip().lower():
-                    await app.async_activate()
                     await window.async_activate()
                     await tab.async_activate()
+                    proc = await asyncio.create_subprocess_exec("open", "-a", "iTerm")
+                    await proc.wait()
                     return
 
     window = app.current_window
@@ -38,6 +40,8 @@ async def main(connection):
             await session.async_set_variable("user.itermDeckName", tab_name)
             if command:
                 await session.async_send_text(command + "\n")
+            proc = await asyncio.create_subprocess_exec("open", "-a", "iTerm")
+            await proc.wait()
             return
 
     new_tab = await window.async_create_tab()
@@ -46,6 +50,8 @@ async def main(connection):
     await session.async_set_variable("user.itermDeckName", tab_name)
     if command:
         await session.async_send_text(command + "\n")
+    proc = await asyncio.create_subprocess_exec("open", "-a", "iTerm")
+    await proc.wait()
 
 
 iterm2.run_until_complete(main)
