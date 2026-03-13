@@ -1,0 +1,3 @@
+node_modules/
+.DS_Store
+plugin/dev.lightsoft.iterm-deck.sdPlugin/bin/plugin.js.map

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "Name": "iTerm Deck",
+  "Version": "1.0.0.0",
+  "Author": "zimin",
+  "Actions": [
+    {
+      "Name": "Open or Use iTerm Tab",
+      "UUID": "dev.lightsoft.iterm-deck.open-or-use",
+      "Icon": "imgs/actions/open-or-use/icon",
+      "Tooltip": "Switches to an existing iTerm2 tab by name, or creates a new one if not found.",
+      "PropertyInspectorPath": "ui/switch-tab.html",
+      "Controllers": ["Keypad"],
+      "States": [
+        {
+          "Image": "imgs/actions/open-or-use/key",
+          "TitleAlignment": "bottom"
+        }
+      ]
+    }
+  ],
+  "Category": "iTerm Deck",
+  "CategoryIcon": "imgs/plugin/category-icon",
+  "CodePath": "bin/plugin.js",
+  "Description": "Switch to or create iTerm2 tabs from your Stream Deck.",
+  "Icon": "imgs/plugin/marketplace",
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.5"
+  },
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "10.15"
+    }
+  ],
+  "Nodejs": {
+    "Version": "20",
+    "Debug": "enabled"
+  },
+  "UUID": "dev.lightsoft.iterm-deck"
+}
