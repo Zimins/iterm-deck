@@ -36,20 +36,22 @@ async def main(connection):
         if matched:
             new_tab = await window.async_create_tab(profile=matched)
             session = new_tab.current_session
-            await session.async_inject(f"\033]0;{tab_name}\007".encode())
-            await session.async_set_variable("user.itermDeckName", tab_name)
             if command:
                 await session.async_send_text(command + "\n")
+                await asyncio.sleep(3)
+            await session.async_inject(f"\033]0;{tab_name}\007".encode())
+            await session.async_set_variable("user.itermDeckName", tab_name)
             proc = await asyncio.create_subprocess_exec("open", "-a", "iTerm")
             await proc.wait()
             return
 
     new_tab = await window.async_create_tab()
     session = new_tab.current_session
-    await session.async_inject(f"\033]0;{tab_name}\007".encode())
-    await session.async_set_variable("user.itermDeckName", tab_name)
     if command:
         await session.async_send_text(command + "\n")
+        await asyncio.sleep(3)
+    await session.async_inject(f"\033]0;{tab_name}\007".encode())
+    await session.async_set_variable("user.itermDeckName", tab_name)
     proc = await asyncio.create_subprocess_exec("open", "-a", "iTerm")
     await proc.wait()
 
